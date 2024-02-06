@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, MouseEvent } from "react";
 
 interface StatefulComponentState {
     inputArray: string[][];
@@ -10,6 +10,10 @@ const Spreadsheet: React.FC = () => {
     const [inputArray, setInputArray] = useState<string[][]>([]);
     const [structureArray, setStructureArray] = useState<number[][]>([]);
     const [cellSelected, setCellSelected] = useState<string>('');
+
+    const handleOnSelected = (event: React.MouseEvent): void => {
+        console.log(event)
+    }
 
     useEffect(() => {
         setStructureArray(Array.from({length: 10}, () => Array(10).fill(1)))
@@ -36,8 +40,8 @@ const Spreadsheet: React.FC = () => {
                                 <th className="spreadsheet-tbody-tr-td-first">{rowIndex + 1}</th>
                                 {row.map((cell, columnIndex) => {
                                     return (
-                                        <td key={`${rowIndex}-${columnIndex}`} className="spreadsheet-tbody-tr-td">
-                                            <input id="" type="text" />
+                                        <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className="spreadsheet-tbody-tr-td" onClick={handleOnSelected}>
+                                            <input id={`input-${rowIndex}-${columnIndex}`} type="text" />
                                         </td>
                                     )
                                 })}

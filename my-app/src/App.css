@@ -25,16 +25,29 @@
 .spreadsheet-thead-tr-td-first,
 .spreadsheet-tbody-tr-td-first {
   border: 1px solid gray;
+  height: 25px;
+  word-wrap: break-word;
 }
 
 .spreadsheet-tbody-tr-td > input {
-  width: 97%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   border: none;
-  height: 100%;
 }
 
 .spreadsheet-tbody-tr-td > input:focus {
   outline: none;
+}
+
+.spreadsheet-thead-tr-td-first,
+.spreadsheet-tbody-tr-td-first {
+  width: 25px;
+}
+
+.spreadsheet-thead-tr-td,
+.spreadsheet-tbody-tr-td {
+  width: 130px;
 }
 
 /* 
