@@ -1,0 +1,46 @@
+.header-banner {
+  background-color: #ffb3ba;
+  margin: 0;
+  height: 60px;
+  padding: 10px;
+}
+
+.header-banner > p {
+  margin: 0;
+  line-height: 60px;
+}
+
+.spreadsheet-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.spreadsheet-thead,
+.spreadsheet-tbody-tr-td-first {
+  background-color: #ffdfba;
+}
+
+.spreadsheet-thead-tr-td,
+.spreadsheet-tbody-tr-td,
+.spreadsheet-thead-tr-td-first,
+.spreadsheet-tbody-tr-td-first {
+  border: 1px solid gray;
+}
+
+.spreadsheet-tbody-tr-td > input {
+  width: 97%;
+  border: none;
+  height: 100%;
+}
+
+.spreadsheet-tbody-tr-td > input:focus {
+  outline: none;
+}
+
+/* 
+#ffb3ba
+#ffdfba
+#ffffba
+#baffc9
+#bae1ff
+*/
