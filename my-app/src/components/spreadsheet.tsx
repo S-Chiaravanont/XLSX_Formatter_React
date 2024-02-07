@@ -1,4 +1,4 @@
-import React, { useEffect, useState, MouseEvent } from "react";
+import React, { useEffect, useState } from "react";
 
 interface StatefulComponentState {
     inputArray: string[][];
@@ -12,7 +12,17 @@ const Spreadsheet: React.FC = () => {
     const [cellSelected, setCellSelected] = useState<string>('');
 
     const handleOnSelected = (event: React.MouseEvent): void => {
-        console.log(event)
+        let cellIndex: string;
+        if ((event.target as Element).nodeName !== "TD") {
+            cellIndex = ((event.target as Element)!.parentNode as Element)!.id;
+        } else {
+            cellIndex = (event.target as Element).id;
+        }
+        setCellSelected(cellIndex)
+    }
+
+    const isCellSelected = (cellIndex: string) => {
+        return cellIndex === cellSelected
     }
 
     useEffect(() => {
@@ -21,7 +31,7 @@ const Spreadsheet: React.FC = () => {
     }, [])
 
     return (
-        <div>
+        <div className="spreadsheet-div">
             <table className="spreadsheet-table">
                 <thead className="spreadsheet-thead">
                     <tr className="spreadsheet-thead-tr">
@@ -40,7 +50,7 @@ const Spreadsheet: React.FC = () => {
                                 <th className="spreadsheet-tbody-tr-td-first">{rowIndex + 1}</th>
                                 {row.map((cell, columnIndex) => {
                                     return (
-                                        <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className="spreadsheet-tbody-tr-td" onClick={handleOnSelected}>
+                                        <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected}>
                                             <input id={`input-${rowIndex}-${columnIndex}`} type="text" />
                                         </td>
                                     )

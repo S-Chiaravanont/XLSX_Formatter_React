@@ -29,14 +29,16 @@
   word-wrap: break-word;
 }
 
-.spreadsheet-tbody-tr-td > input {
+.spreadsheet-tbody-tr-td > input,
+.selectedCell > input {
   width: 100%;
   margin: 0;
   padding: 0;
   border: none;
 }
 
-.spreadsheet-tbody-tr-td > input:focus {
+.spreadsheet-tbody-tr-td > input:focus,
+.selectedCell > input:focus {
   outline: none;
 }
 
@@ -48,6 +50,17 @@
 .spreadsheet-thead-tr-td,
 .spreadsheet-tbody-tr-td {
   width: 130px;
+}
+
+.selectedCell {
+  outline: 2px solid #bae1ff;
+  width: 130px;
+  height: 25px;
+}
+
+.spreadsheet-div {
+  width: 1400px;
+  margin: auto;
 }
 
 /* 
