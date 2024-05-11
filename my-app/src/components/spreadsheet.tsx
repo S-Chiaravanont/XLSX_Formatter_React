@@ -10,6 +10,14 @@ const Spreadsheet: React.FC = () => {
     const [inputArray, setInputArray] = useState<string[][]>([]);
     const [structureArray, setStructureArray] = useState<number[][]>([]);
     const [cellSelected, setCellSelected] = useState<string>('');
+    const [columnMenuVisibility, setColumnMenuVisibility] = useState<Boolean>(false);
+    const [rowMenuVisibility, setRowMenuVisibility] = useState<Boolean>(false);
+    const [cellMenuVisibility, setCellMenuVisibility] = useState<Boolean>(false);
+
+    useEffect(() => {
+        setStructureArray(Array.from({length: 10}, () => Array(10).fill(1)))
+        setInputArray(Array.from({length: 10}, () => Array(10).fill('')))
+    }, [])
 
     const handleOnSelected = (event: React.MouseEvent): void => {
         let cellIndex: string;
@@ -25,20 +33,61 @@ const Spreadsheet: React.FC = () => {
         return cellIndex === cellSelected
     }
 
-    useEffect(() => {
-        setStructureArray(Array.from({length: 10}, () => Array(10).fill(1)))
-        setInputArray(Array.from({length: 10}, () => Array(10).fill('')))
-    }, [])
+    console.log(cellSelected)
+
+    const handleColumnMenu = (e: React.MouseEvent): void => {
+        console.log((e.target as Element).id)
+        const columnMenuDropdown = document.getElementById('column-dropdown-button') as Element
+        columnMenuDropdown?.classList.remove('display-none-toggle')
+    }
+
+    const handleRowMenu = (e: React.MouseEvent) : void => {
+        console.log((e.target as Element).id)
+        const columnMenuDropdown = document.getElementById('row-dropdown-button') as Element
+        columnMenuDropdown?.classList.remove('display-none-toggle')
+    }
+
+    const handleCellMenu = (e: React.MouseEvent) : void => {
+        console.log((e.target as Element).id)
+        const columnMenuDropdown = document.getElementById('cell-dropdown-button') as Element
+        columnMenuDropdown?.classList.remove('display-none-toggle')
+    }
 
     return (
         <div className="spreadsheet-div">
+            <div className="spreadsheet-menus-div">
+                <div className="row-dropdown" id='column-dropdown-div' onMouseEnter={() => setCellMenuVisibility(true)} onMouseLeave={() => setCellMenuVisibility(false)}>
+                    <button className="row-dropbtn" id="cell-dropdown-button">Cell</button>
+                    {cellMenuVisibility &&<div className="row-dropdown-content" id='cell-dropdown-content'>
+                        <p id="merge-cell" onClick={handleCellMenu}>Merge</p>
+                        <p id="split-cell" onClick={handleCellMenu}>Split</p>
+                    </div>}
+                </div> 
+                <div className="row-dropdown" id='column-dropdown-div' onMouseEnter={() => setColumnMenuVisibility(true)} onMouseLeave={() => setColumnMenuVisibility(false)}>
+                    <button className="row-dropbtn" id='column-dropdown-button'>Column</button>
+                    {columnMenuVisibility && <div className="row-dropdown-content" id='column-dropdown-content'>
+                        <p id="add-column-above" onClick={handleColumnMenu}>Add column (above)</p>
+                        <p id="add-column-below" onClick={handleColumnMenu}>Add column (below)</p>
+                        <p id="remove-column" onClick={handleColumnMenu}>Remove row</p>
+                    </div>}
+                </div> 
+                <div className="row-dropdown" onMouseEnter={() => setRowMenuVisibility(true)} onMouseLeave={() => setRowMenuVisibility(false)}>
+                    <button className="row-dropbtn">Row</button>
+                    {rowMenuVisibility && <div className="row-dropdown-content" id='row-dropdown-content'>
+                        <p id="add-row-left" onClick={handleRowMenu}>Add row (left)</p>
+                        <p id="add-row-right" onClick={handleRowMenu}>Add row (right)</p>
+                        <p id="remove-row" onClick={handleRowMenu}>Remove row</p>
+                    </div>}
+                </div> 
+            </div>
+
             <table className="spreadsheet-table">
                 <thead className="spreadsheet-thead">
                     <tr className="spreadsheet-thead-tr">
                     <th className="spreadsheet-thead-tr-td-first"></th>
                         {structureArray.map((_, index) => {
                             return (
-                                <th className="spreadsheet-thead-tr-td">{index + 1}</th>
+                                <th key={`header-${index}`} className="spreadsheet-thead-tr-td">{index + 1}</th>
                             )
                         })}
                     </tr>
@@ -51,7 +100,7 @@ const Spreadsheet: React.FC = () => {
                                 {row.map((cell, columnIndex) => {
                                     return (
                                         <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected}>
-                                            <input id={`input-${rowIndex}-${columnIndex}`} type="text" />
+                                            {/* <input id={`input-${rowIndex}-${columnIndex}`} type="text" /> */}
                                         </td>
                                     )
                                 })}
