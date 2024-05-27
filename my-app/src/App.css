@@ -76,6 +76,7 @@
   display: flex;
   flex-wrap: nowrap;
   margin-bottom: 15px;
+  align-content: end;
 }
 
  /* Dropdown Button */
@@ -125,3 +126,11 @@
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .row-dropdown:hover .row-dropbtn {background-color: #ffdfba; color: white;} 
+
+.merge-modal {
+  background-color: white;
+  border-radius: 20px;
+  border: 1px solid black;
+  position: fixed;
+  left: 
+}
