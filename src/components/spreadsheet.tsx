@@ -27,7 +27,11 @@ const Spreadsheet: React.FC = () => {
         } else {
             cellIndex = (event.target as Element).id;
         }
-        setCellSelected(cellIndex)
+        if (cellIndex === cellSelected) {
+            setCellSelected('')
+        } else {
+            setCellSelected(cellIndex)
+        }
     }
 
     const isCellSelected = (cellIndex: string) => {
