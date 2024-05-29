@@ -41,16 +41,65 @@ const Spreadsheet: React.FC = () => {
     console.log(cellSelected)
 
     const handleColumnMenu = (e: React.MouseEvent): void => {
-        console.log((e.target as Element).id)
+        if (!cellSelected) {
+            return
+        }
+        // console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
         setColumnMenuVisibility(false);
+        const currentColumnIndex: number = parseInt(cellSelected.split('-')[2])
 
+        const shallowCopyStructureArray = [...structureArray]
+        const shallowCopyInputArray = [...inputArray]
+        const loopLength = inputArray.length;
+
+        for (let i = 0; i < loopLength; i++) {
+            if (selectedCommand.includes('remove')) {
+                shallowCopyInputArray[i].splice(currentColumnIndex, 1)  
+            } else {
+                if (selectedCommand.includes('left')) {
+                    shallowCopyInputArray[i].splice(currentColumnIndex, 0, '1')
+                } else if (selectedCommand.includes('right')) {
+                    shallowCopyInputArray[i].splice(currentColumnIndex + 1, 0, '1')
+                }
+            }
+        }
+        setInputArray(shallowCopyInputArray)
+        if (selectedCommand.includes('left')) {
+            const selectedCellArray = cellSelected.split('-')
+            selectedCellArray[2] = String(currentColumnIndex + 1)
+            setCellSelected(selectedCellArray.join('-'))
+        }
     }
 
     const handleRowMenu = (e: React.MouseEvent) : void => {
-        console.log((e.target as Element).id)
+        if (!cellSelected) {
+            return
+        }
+        // console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
         setRowMenuVisibility(false)
+        const currentRowIndex: number = parseInt(cellSelected.split('-')[1])
+        if (selectedCommand.includes('remove')) {
+            const shallowCopyInputArray = [...inputArray]
+            shallowCopyInputArray.splice(currentRowIndex, 1)  
+            setInputArray(shallowCopyInputArray)
+        } else {
+            const numberOfColumn = inputArray[0].length
+            const newRow = Array(numberOfColumn).fill(1)
+            const shallowCopyInputArray = [...inputArray]
+            const shallowCopyStructureArray = [...structureArray]
+            if (selectedCommand.includes('above')) {
+                shallowCopyInputArray.splice(currentRowIndex, 0, newRow)
+                const selectedCellArray = cellSelected.split('-')
+                selectedCellArray[1] = String(currentRowIndex + 1)
+                setCellSelected(selectedCellArray.join('-'))
+                setInputArray(shallowCopyInputArray)
+            } else if (selectedCommand.includes('below')) {
+                shallowCopyInputArray.splice(currentRowIndex + 1, 0, newRow)
+                setInputArray(shallowCopyInputArray)
+            }
+        }
     }
 
     const handleCellMenu = (e: React.MouseEvent) : void => {
@@ -96,16 +145,16 @@ const Spreadsheet: React.FC = () => {
                     <div className="row-dropdown" id='column-dropdown-div' onMouseEnter={() => setColumnMenuVisibility(true)} onMouseLeave={() => setColumnMenuVisibility(false)}>
                         <button className="row-dropbtn" id='column-dropdown-button'>Column</button>
                         {columnMenuVisibility && <div className="row-dropdown-content" id='column-dropdown-content'>
-                            <p id="add-column-above" onClick={handleColumnMenu}>Add column (above)</p>
-                            <p id="add-column-below" onClick={handleColumnMenu}>Add column (below)</p>
-                            <p id="remove-column" onClick={handleColumnMenu}>Remove row</p>
+                            <p id="add-column-left" onClick={handleColumnMenu}>Add column (left)</p>
+                            <p id="add-column-right" onClick={handleColumnMenu}>Add column (right)</p>
+                            <p id="remove-column" onClick={handleColumnMenu}>Remove column</p>
                         </div>}
                     </div> 
                     <div className="row-dropdown" onMouseEnter={() => setRowMenuVisibility(true)} onMouseLeave={() => setRowMenuVisibility(false)}>
                         <button className="row-dropbtn">Row</button>
                         {rowMenuVisibility && <div className="row-dropdown-content" id='row-dropdown-content'>
-                            <p id="add-row-left" onClick={handleRowMenu}>Add row (left)</p>
-                            <p id="add-row-right" onClick={handleRowMenu}>Add row (right)</p>
+                            <p id="add-row-above" onClick={handleRowMenu}>Add row (above)</p>
+                            <p id="add-row-below" onClick={handleRowMenu}>Add row (below)</p>
                             <p id="remove-row" onClick={handleRowMenu}>Remove row</p>
                         </div>}
                     </div> 
@@ -117,7 +166,7 @@ const Spreadsheet: React.FC = () => {
                     <thead className="spreadsheet-thead">
                         <tr className="spreadsheet-thead-tr">
                         <th className="spreadsheet-thead-tr-td-first"></th>
-                            {structureArray.map((_, index) => {
+                            {inputArray[0].map((_, index) => {
                                 return (
                                     <th key={`header-${index}`} className="spreadsheet-thead-tr-td">{index + 1}</th>
                                 )
