@@ -43,23 +43,20 @@ const Spreadsheet: React.FC = () => {
     const handleColumnMenu = (e: React.MouseEvent): void => {
         console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
-        const columnMenuDropdown = document.getElementById('column-dropdown-button') as Element
-        columnMenuDropdown?.classList.remove('display-none-toggle')
+        setColumnMenuVisibility(false);
 
     }
 
     const handleRowMenu = (e: React.MouseEvent) : void => {
         console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
-        const columnMenuDropdown = document.getElementById('row-dropdown-button') as Element
-        columnMenuDropdown?.classList.remove('display-none-toggle')
+        setRowMenuVisibility(false)
     }
 
     const handleCellMenu = (e: React.MouseEvent) : void => {
         console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
-        const columnMenuDropdown = document.getElementById('cell-dropdown-button') as Element
-        columnMenuDropdown?.classList.remove('display-none-toggle')
+        setCellMenuVisibility(false)
 
         if (selectedCommand === "merge-cell") {
             console.log('work?')
