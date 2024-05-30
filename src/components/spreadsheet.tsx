@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 
 interface StatefulComponentState {
     inputArray: string[][];
-    structureArray: number[][];
+    structureArray: number[][][];
     cellSelected: string;
 }
 
 const Spreadsheet: React.FC = () => {
     const [inputArray, setInputArray] = useState<string[][]>([]);
-    const [structureArray, setStructureArray] = useState<number[][]>([]);
+    const [structureArray, setStructureArray] = useState<number[][][]>([]);
     const [cellSelected, setCellSelected] = useState<string>('');
     const [columnMenuVisibility, setColumnMenuVisibility] = useState<Boolean>(false);
     const [rowMenuVisibility, setRowMenuVisibility] = useState<Boolean>(false);
@@ -16,9 +16,11 @@ const Spreadsheet: React.FC = () => {
     const [mergeModalStatus, setMergeModalStatus] = useState<Boolean>(false);
 
     useEffect(() => {
-        setStructureArray(Array.from({length: 10}, () => Array(10).fill(1)))
+        setStructureArray(Array.from({length: 10}, () => Array(10).fill([1,1])))
         setInputArray(Array.from({length: 10}, () => Array(10).fill('')))
     }, [])
+
+    console.log(structureArray)
 
     const handleOnSelected = (event: React.MouseEvent): void => {
         let cellIndex: string;
@@ -58,9 +60,9 @@ const Spreadsheet: React.FC = () => {
                 shallowCopyInputArray[i].splice(currentColumnIndex, 1)  
             } else {
                 if (selectedCommand.includes('left')) {
-                    shallowCopyInputArray[i].splice(currentColumnIndex, 0, '1')
+                    shallowCopyInputArray[i].splice(currentColumnIndex, 0, '')
                 } else if (selectedCommand.includes('right')) {
-                    shallowCopyInputArray[i].splice(currentColumnIndex + 1, 0, '1')
+                    shallowCopyInputArray[i].splice(currentColumnIndex + 1, 0, '')
                 }
             }
         }
@@ -86,7 +88,7 @@ const Spreadsheet: React.FC = () => {
             setInputArray(shallowCopyInputArray)
         } else {
             const numberOfColumn = inputArray[0].length
-            const newRow = Array(numberOfColumn).fill(1)
+            const newRow = Array(numberOfColumn).fill('')
             const shallowCopyInputArray = [...inputArray]
             const shallowCopyStructureArray = [...structureArray]
             if (selectedCommand.includes('above')) {
@@ -103,31 +105,95 @@ const Spreadsheet: React.FC = () => {
     }
 
     const handleCellMenu = (e: React.MouseEvent) : void => {
-        console.log((e.target as Element).id)
+        if (!cellSelected) {
+            return
+        }
+        // console.log((e.target as Element).id)
         const selectedCommand = (e.target as Element).id
         setCellMenuVisibility(false)
-
+        const shallowCopyStructureArray = [...structureArray]
+        const selectedColumnIndex: number = parseInt(cellSelected.split('-')[2])
+        const selectedRowIndex: number = parseInt(cellSelected.split('-')[1])
         if (selectedCommand === "merge-cell") {
-            console.log('work?')
             setMergeModalStatus(true)
+        } else if (selectedCommand.includes('split')) {
+            const columnStructure: number = structureArray[selectedRowIndex][selectedColumnIndex][1];
+            const rowStructure: number = structureArray[selectedRowIndex][selectedColumnIndex][0];
+            if (columnStructure === 1 && rowStructure === 1) {
+                return
+            } else {
+                for (let i = 0; i < rowStructure; i++) {
+                    for (let j = 0; j < columnStructure; j++) {
+                        shallowCopyStructureArray[selectedRowIndex + i][selectedColumnIndex + j][0] = 1;
+                        shallowCopyStructureArray[selectedRowIndex + i][selectedColumnIndex + j][1] = 1;
+                    }
+                }
+            }
         }
+        setStructureArray(shallowCopyStructureArray)
+    }
+
+    const handleMergeSubmit = (e: React.FormEvent<HTMLFormElement>) : void => {
+        e.preventDefault()
+        const newColumnStructureValue: number = parseInt(e.currentTarget.mergeColumnValue.value)
+        const newRowStructureValue: number = parseInt(e.currentTarget.mergeRowValue.value)
+
+        if (newColumnStructureValue === 1 && newRowStructureValue === 1) {
+            setMergeModalStatus(false)
+            let form = document.getElementById('mergeForm')
+            if(form) (form as HTMLFormElement).reset();
+            return
+        }
+
+        const selectedColumnIndex: number = parseInt(cellSelected.split('-')[2])
+        const selectedRowIndex: number = parseInt(cellSelected.split('-')[1])
+        const shallowCopyStructureArray = [...structureArray]
+        for (let i = 0; i < newRowStructureValue; i++) {
+            for (let j = 0; j < newColumnStructureValue; j++) {
+                if (i === 0 && j === 0) {
+                    shallowCopyStructureArray[selectedRowIndex + i][selectedColumnIndex + j] = [newRowStructureValue, newColumnStructureValue];
+                } else {
+                    shallowCopyStructureArray[selectedRowIndex + i][selectedColumnIndex + j] = [0, 0];
+                }
+            }
+        }
+        setStructureArray(shallowCopyStructureArray)
+        setMergeModalStatus(false)
+        let form = document.getElementById('mergeForm')
+        if(form) (form as HTMLFormElement).reset();
     }
 
     const mergeModal = () => {
         if (mergeModalStatus) {
             return (
                 <div className="merge-modal" id="merge-modal">
-                    <p>Merge tool:</p>
-                    <p>Column span:</p><input type="number" id="merge-column" />
-                    <p>Row span:</p><input type="number" id="merge-row" />
-                    <div>
-                        <button>Merge</button>
-                        <button onClick={() => setMergeModalStatus(false)}>Back</button>
-                    </div>
+                    <form onSubmit={handleMergeSubmit} id="mergeForm">
+                        <p>Merge tool:</p>
+                        <p>Column span:</p><input type="number" id="merge-column" name="mergeColumnValue" defaultValue={1} />
+                        <p>Row span:</p><input type="number" id="merge-row" name="mergeRowValue" defaultValue={1} />
+                        <div>
+                            <button type="submit">Merge</button>
+                            <button onClick={() => setMergeModalStatus(false)}>Back</button>
+                        </div>
+                    </form>
                 </div>
             )
         } else {
             return
+        }
+    }
+
+    const renderCell = (rowIndex: number, columnIndex: number) => {
+        const rowStructureValueAtIndex: number = structureArray[rowIndex][columnIndex][0]
+        const columnStructureValueAtIndex: number = structureArray[rowIndex][columnIndex][1]
+        if (rowStructureValueAtIndex === 0 && columnStructureValueAtIndex === 0) {
+            return <></>
+        } else {
+            return (
+                <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected} colSpan={columnStructureValueAtIndex} rowSpan={rowStructureValueAtIndex}>
+                {/* <input id={`input-${rowIndex}-${columnIndex}`} type="text" /> */}
+                </td>
+            )
         }
     }
 
@@ -166,7 +232,7 @@ const Spreadsheet: React.FC = () => {
                     <thead className="spreadsheet-thead">
                         <tr className="spreadsheet-thead-tr">
                         <th className="spreadsheet-thead-tr-td-first"></th>
-                            {inputArray[0].map((_, index) => {
+                            {inputArray[0] && inputArray[0].map((_, index) => {
                                 return (
                                     <th key={`header-${index}`} className="spreadsheet-thead-tr-td">{index + 1}</th>
                                 )
@@ -178,12 +244,8 @@ const Spreadsheet: React.FC = () => {
                             return (
                                 <tr key={rowIndex} className="spreadsheet-tbody-tr">
                                     <th className="spreadsheet-tbody-tr-td-first">{rowIndex + 1}</th>
-                                    {row.map((cell, columnIndex) => {
-                                        return (
-                                            <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected}>
-                                                {/* <input id={`input-${rowIndex}-${columnIndex}`} type="text" /> */}
-                                            </td>
-                                        )
+                                    {row.map((_, columnIndex) => {
+                                        return renderCell(rowIndex, columnIndex)
                                     })}
                                 </tr>
                             )
