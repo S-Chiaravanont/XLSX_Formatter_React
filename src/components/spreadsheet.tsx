@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import hljs from "highlight.js";
+import "highlight.js/styles/github.css";
+
 
 interface StatefulComponentState {
     inputArray: string[][];
@@ -20,7 +23,48 @@ const Spreadsheet: React.FC = () => {
         setInputArray(Array.from({length: 10}, () => Array(10).fill('')))
     }, [])
 
-    console.log(structureArray)
+    useEffect(() => {
+        hljs.highlightAll();
+    });
+
+    // with a given array of matched indexes of row/column that don't contain [1,1]
+    // find and filter out indexes that is an increasing sequence and return only the left most column index in possible merged cell structure
+    function findIncreasingSequenceRow(array: number[][]) {
+        if (array.length === 1) {
+            return array
+        }
+        let firstValues = [];
+        for (let i = 0; i < array.length - 1; i++) {
+            if (array[i][1] < array[i + 1][1] && (i === 0 || array[i][1] !== array[i - 1][1] + 1)) {
+                firstValues.push(array[i]);
+            }
+        }
+            // Check the last element if it's part of an increasing sequence
+        if (array.length > 1 && array[array.length - 1][1] > array[array.length - 2][1]) {
+            firstValues.push(array[array.length - 1]);
+        }
+        return firstValues;
+    }
+
+    // with the given array of matched and filtered row/column indexes
+    // find the exact row index where the merge value is stored by finding the first matched non-0 structure value by going upward (row)
+    function findMergedCellStartingIndexRowAbove(array: number[][]) {
+        const loopLength = array.length;
+        const finalArray = []
+        for (let i = 0; i < loopLength; i++) {
+            const rowPosition = array[i][0]
+            const columnPosition = array[i][1]
+            for (let j = rowPosition; j > -1; j--) {
+                if (structureArray[j][columnPosition][0] !== 0) {
+                    finalArray.push([j, columnPosition])
+                    break
+                }
+            }
+        }
+        return finalArray;
+    }
+
+    // console.log(structureArray)
 
     const handleOnSelected = (event: React.MouseEvent): void => {
         let cellIndex: string;
@@ -40,7 +84,7 @@ const Spreadsheet: React.FC = () => {
         return cellIndex === cellSelected
     }
 
-    console.log(cellSelected)
+    // console.log(cellSelected)
 
     const handleColumnMenu = (e: React.MouseEvent): void => {
         if (!cellSelected) {
@@ -82,24 +126,73 @@ const Spreadsheet: React.FC = () => {
         const selectedCommand = (e.target as Element).id
         setRowMenuVisibility(false)
         const currentRowIndex: number = parseInt(cellSelected.split('-')[1])
+        const shallowCopyInputArray = [...inputArray]
+        const shallowCopyStructureArray = [...structureArray]
         if (selectedCommand.includes('remove')) {
-            const shallowCopyInputArray = [...inputArray]
             shallowCopyInputArray.splice(currentRowIndex, 1)  
             setInputArray(shallowCopyInputArray)
+
+            // structureArray
+            shallowCopyStructureArray.splice(currentRowIndex, 1)
+            setStructureArray(shallowCopyStructureArray)
         } else {
             const numberOfColumn = inputArray[0].length
             const newRow = Array(numberOfColumn).fill('')
-            const shallowCopyInputArray = [...inputArray]
-            const shallowCopyStructureArray = [...structureArray]
             if (selectedCommand.includes('above')) {
                 shallowCopyInputArray.splice(currentRowIndex, 0, newRow)
                 const selectedCellArray = cellSelected.split('-')
                 selectedCellArray[1] = String(currentRowIndex + 1)
                 setCellSelected(selectedCellArray.join('-'))
                 setInputArray(shallowCopyInputArray)
+
+                // structureArray
+                // finding if there's any column affected by adding new row at current row index
+                // check if structureArray of rowValue at currentRowIndex and different columnIndexes isn't 1
+                let listOfCurrentMergePositionIni = []
+                for (let i = 0; i < shallowCopyStructureArray[currentRowIndex].length; i++) {
+                    if (shallowCopyStructureArray[currentRowIndex][i][0] !== 1) {
+                        listOfCurrentMergePositionIni.push([currentRowIndex, i])
+                    }
+                }
+                // if no matching found, insert new row of [1,1]
+                if (listOfCurrentMergePositionIni.length === 0) {
+                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    shallowCopyStructureArray.splice(currentRowIndex, 0, finalInsertArray)
+                    setStructureArray(shallowCopyStructureArray)
+                } else {
+                    const listOfCurrentMergePositionMid = findIncreasingSequenceRow(listOfCurrentMergePositionIni)
+                    const listOfCurrentMergePositionFinal = findMergedCellStartingIndexRowAbove(listOfCurrentMergePositionMid)        
+    
+                    // create a new structure row of [1,1]
+                    // change affected existing merged column to [0,0]
+                    // if a cell/column is the starting merged column, skip it
+                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    listOfCurrentMergePositionIni.forEach((item: number[]) => {
+                        if (structureArray[item[0]][item[1]][0] === 0) {
+                            finalInsertArray.splice(item[1], 1, [0,0])
+                        }
+                    })
+
+                    // with the list of starting position for merged cells that are affected by inserting new row (above)
+                    // accessing the structure (row) value and increment it by 1
+                    // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
+                    listOfCurrentMergePositionFinal.forEach((item: number[]) => {
+                        if (item[0] !== currentRowIndex) {
+                            const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] + 1
+                            shallowCopyStructureArray[item[0]][item[1]][0] = newStructureValue
+                        }
+                    })
+                    shallowCopyStructureArray.splice(currentRowIndex, 0, finalInsertArray)
+    
+                    setStructureArray(shallowCopyStructureArray)
+                }
             } else if (selectedCommand.includes('below')) {
                 shallowCopyInputArray.splice(currentRowIndex + 1, 0, newRow)
                 setInputArray(shallowCopyInputArray)
+
+                // structureArray
+                shallowCopyStructureArray.splice(currentRowIndex + 1, 0, Array(10).fill([1,1]))
+                setStructureArray(shallowCopyStructureArray)
             }
         }
     }
