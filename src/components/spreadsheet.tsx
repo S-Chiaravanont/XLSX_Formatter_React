@@ -28,7 +28,7 @@ const Spreadsheet: React.FC = () => {
     });
 
     // with a given array of matched indexes of row/column that don't contain [1,1]
-    // find and filter out indexes that is an increasing sequence and return only the left most column index in possible merged cell structure
+    // find and filter out indexes that is an increasing sequence (column on index 1) and return only the left most column index in possible merged cell structure
     function findIncreasingSequenceRow(array: number[][]) {
         if (array.length === 1) {
             return array
@@ -57,6 +57,43 @@ const Spreadsheet: React.FC = () => {
             for (let j = rowPosition; j > -1; j--) {
                 if (structureArray[j][columnPosition][0] !== 0) {
                     finalArray.push([j, columnPosition])
+                    break
+                }
+            }
+        }
+        return finalArray;
+    }
+
+    // with a given array of matched indexes of row/column that don't contain [1,1]
+    // find and filter out indexes that is an increasing sequence (row on index 0) and return only the left most column index in possible merged cell structure
+    function findIncreasingSequenceColumn(array: number[][]) {
+        if (array.length === 1) {
+            return array
+        }
+        let firstValues = [];
+        for (let i = 0; i < array.length - 1; i++) {
+            if (array[i][0] < array[i + 1][0] && (i === 0 || array[i][0] !== array[i - 1][0] + 1)) {
+                firstValues.push(array[i]);
+            }
+        }
+        // Check the last element if it's part of an increasing sequence
+        // if (array.length > 1 && array[array.length - 1][0] > array[array.length - 2][0]) {
+        //     firstValues.push(array[array.length - 1]);
+        // }
+        return firstValues;
+    }
+
+    // with the given array of matched and filtered row/column indexes
+    // find the exact row index where the merge value is stored by finding the first matched non-0 structure value by going leftward (column)
+    function findMergedCellStartingIndexColumnLeft(array: number[][]) {
+        const loopLength = array.length;
+        const finalArray = []
+        for (let i = 0; i < loopLength; i++) {
+            const rowPosition = array[i][0]
+            const columnPosition = array[i][1]
+            for (let j = columnPosition; j > -1; j--) {
+                if (structureArray[rowPosition][j][0] !== 0) {
+                    finalArray.push([rowPosition, j])
                     break
                 }
             }
@@ -94,11 +131,13 @@ const Spreadsheet: React.FC = () => {
         const selectedCommand = (e.target as Element).id
         setColumnMenuVisibility(false);
         const currentColumnIndex: number = parseInt(cellSelected.split('-')[2])
+        const currentRowIndex: number = parseInt(cellSelected.split('-')[1])
 
         const shallowCopyStructureArray = [...structureArray]
         const shallowCopyInputArray = [...inputArray]
         const loopLength = inputArray.length;
 
+        // inputArray changes
         for (let i = 0; i < loopLength; i++) {
             if (selectedCommand.includes('remove')) {
                 shallowCopyInputArray[i].splice(currentColumnIndex, 1)  
@@ -110,7 +149,257 @@ const Spreadsheet: React.FC = () => {
                 }
             }
         }
+
+        // structureArray changes
+        if (selectedCommand.includes('left')) {
+            console.log('add left')
+            // structureArray
+            // finding if there's any row affected by removing column at current column index
+            // check if structureArray of columnValue at currentColumnIndex and different rowIndexes is not 1
+            let listOfCurrentMergePositionIni = []
+            for (let i = 0; i < shallowCopyStructureArray.length; i++) {
+                if (shallowCopyStructureArray[i][currentColumnIndex][0] !== 1 || shallowCopyStructureArray[i][currentColumnIndex][1] !== 1) {
+                    listOfCurrentMergePositionIni.push([i, currentColumnIndex])
+                }
+            }
+            // if no matching found, insert new column of [1,1]
+            console.log('currentColumnIndex', currentColumnIndex)
+            if (listOfCurrentMergePositionIni.length === 0 || currentColumnIndex === 0) {
+                let finalInsertArray: number[] = [1, 1]
+                for (let i = 0; i < structureArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(currentColumnIndex, 0, finalInsertArray)
+                }
+                setStructureArray(shallowCopyStructureArray)
+            } else {
+                // condition #1 -- if there's merged row with starting position on the same column -> don't do anything
+                // condition #2 -- if there's merged row with starting position left to selected column -> locate and increment +1 to column value
+
+                console.log('listOfCurrentMergePositionIni', listOfCurrentMergePositionIni) // correct
+
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedRowIndex: number = listOfCurrentMergePositionIni[0][0]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    let newStartingMergedRowIndex: number = listOfCurrentMergePositionIni[i][0]
+                    if (newStartingMergedRowIndex < currentStartingMergedRowIndex) continue
+
+                    // going through each affected row, starting at the top, check its structure value, if it's 0 (either col or row) move onto the left column
+                    // i.e. `listOfCurrentMergePositionIni[i][1] - 1` -> check again
+                    // if structure is not 0, get the row value -> it'll determine the next merge block
+                    let currentColumnIndex: number = listOfCurrentMergePositionIni[0][1];
+                    let condition: boolean = true;
+                    let counter: number = 0;
+                    while (condition) {
+                        let newStructureRowValue: number = structureArray[newStartingMergedRowIndex][currentColumnIndex - counter][0]
+                        if (newStructureRowValue !== 0) {
+                            listOfMergePositionFinal.push([newStartingMergedRowIndex, currentColumnIndex - counter])
+                            currentStartingMergedRowIndex = newStartingMergedRowIndex + newStructureRowValue
+                            condition = false
+                        } else {
+                            counter += 1
+                        }
+                    }
+                }
+
+                console.log('listOfMergePositionFinal', listOfMergePositionFinal)
+
+                // with the list of starting position for merged cells that are affected by adding new column (left)
+                // accessing the structure (column) value and increment by 1
+                // if the starting merged cell position is on the same column, inserting column left should not affect therefore it is skipped 
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    if (item[1] !== currentColumnIndex) {
+                        const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][1] + 1
+                        shallowCopyStructureArray[item[0]][item[1]][1] = newStructureValue
+                    }
+                })
+
+                // create a new structure column of [1,1]
+                // check if structure value at currentColumnIndex - 1 (left side) is not 1 -> meaning it's part of merged cell
+                // change affected existing merged cell to [0,0]
+                // if a cell/column is the starting merged row, skip it
+                let finalInsertArray: number[][] = Array(structureArray.length).fill([1,1])
+                for (let i = 0; i < structureArray.length; i++) {
+                    // console.log('structureArray[i][currentColumnIndex][0]', structureArray[i][currentColumnIndex][0])
+                    if ((structureArray[i][currentColumnIndex - 1][0] !== 1 || structureArray[i][currentColumnIndex - 1][1] !== 1) && (structureArray[i][currentColumnIndex][0] !== 1 || structureArray[i][currentColumnIndex][1] !== 1)) {
+                        finalInsertArray.splice(i, 1, [0,0])
+                    }
+                }
+
+                console.log('finalInsertArray', finalInsertArray) // correct
+
+                // insert structure to column left of selected column index
+                for (let i = 0; i < finalInsertArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(currentColumnIndex, 0, finalInsertArray[i])
+                }
+
+                console.log('shallowCopyStructureArray', shallowCopyStructureArray)
+                setStructureArray(shallowCopyStructureArray)
+            }
+        } else if (selectedCommand.includes('right')) {
+            console.log('add right')
+            // check if selected cell is a merged cell, if yes, adjust current column to account for merged column value
+            const updatedColumnIndex = structureArray[currentRowIndex][currentColumnIndex][1] === 1 ? currentColumnIndex : currentColumnIndex + structureArray[currentRowIndex][currentColumnIndex][1] - 1
+
+            // check if structureArray columnValue at currentColumnIndex + 1 (right) at different rowIndexes is not 1 to see which cell is part of merged cell(s)
+            let listOfCurrentMergePositionIni = [] as number[][]
+            for (let i = 0; i < shallowCopyStructureArray.length; i++) {
+                if ((shallowCopyStructureArray[i][updatedColumnIndex][1] !== 1 || shallowCopyStructureArray[i][currentColumnIndex][1] !== 1) && (shallowCopyStructureArray[i][updatedColumnIndex + 1][1] !== 1 || shallowCopyStructureArray[i][currentColumnIndex + 1][1] !== 1)) {
+                    listOfCurrentMergePositionIni.push([i, updatedColumnIndex])
+                }
+            }
+            console.log('updatedColumnIndex', updatedColumnIndex)
+            console.log('listOfCurrentMergePositionIni', listOfCurrentMergePositionIni)
+
+            // if no matching found, insert new column of [1,1]
+            if (listOfCurrentMergePositionIni.length === 0 || updatedColumnIndex === structureArray[0].length - 1) {
+                let finalInsertArray: number[] = [1, 1]
+                for (let i = 0; i < structureArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(updatedColumnIndex + 1, 0, finalInsertArray)
+                }
+                setStructureArray(shallowCopyStructureArray)
+            } else {
+                // condition #1 -- if there's merged row with starting position on the same column -> locate and increment +1 to column value
+                // condition #2 -- if there's merged row with starting position right to selected column -> locate and mark current row for new structure value of[0,0]
+
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedRowIndex: number = listOfCurrentMergePositionIni[0][0]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    let newStartingMergedRowIndex: number = listOfCurrentMergePositionIni[i][0]
+                    if (newStartingMergedRowIndex < currentStartingMergedRowIndex) continue
+
+                    // going through each affected row, starting at the top, check its structure value, if it's 0 (either col or row) move onto the next left column
+                    // i.e. `listOfCurrentMergePositionIni[i][1] - 1 (counter)` -> check again
+                    // if structure is not 0, get the row value -> it'll determine the next merge block
+                    let currentColumnIndex: number = listOfCurrentMergePositionIni[0][1];
+                    let condition: boolean = true;
+                    let counter: number = 0;
+                    while (condition) {
+                        let newStructureRowValue: number = structureArray[newStartingMergedRowIndex][currentColumnIndex - counter][0]
+                        if (newStructureRowValue !== 0) {
+                            listOfMergePositionFinal.push([newStartingMergedRowIndex, currentColumnIndex - counter])
+                            currentStartingMergedRowIndex = newStartingMergedRowIndex + newStructureRowValue
+                            condition = false
+                        } else {
+                            counter += 1
+                        }
+                    }
+                }
+
+                console.log('listOfMergePositionFinal', listOfMergePositionFinal)
+
+                // with the list of starting position for merged cells that are affected by adding new column (right)
+                // accessing the structure (column) value and increment by 1
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    const currentColumnStructureValue = shallowCopyStructureArray[item[0]][item[1]][1]
+                    const newColumnStructureValue = currentColumnStructureValue + 1
+                    shallowCopyStructureArray[item[0]][item[1]][1] = newColumnStructureValue
+                })
+
+                // create a new structure column of [1,1]
+                // check if structure value at updatedColumnIndex + 1 (right side) is 0 -> meaning it's part of merged cell 
+                // AND structure value at updatedColumnIndex is not 1
+                // change affected existing merged cell to [0,0]
+                // if a cell/column is the starting merged row, skip it
+                let finalInsertArray: number[][] = Array(structureArray.length).fill([1,1])
+                for (let i = 0; i < structureArray.length; i++) {
+                    if ((structureArray[i][updatedColumnIndex + 1][0] === 0 || structureArray[i][updatedColumnIndex + 1][1] === 0) && (structureArray[i][updatedColumnIndex][0] !== 1 || structureArray[i][updatedColumnIndex][1] !== 1)) {
+                        finalInsertArray.splice(i, 1, [0,0])
+                    }
+                }
+
+                console.log('finalInsertArray', finalInsertArray)
+
+                // insert structure to column left of selected column index
+                for (let i = 0; i < finalInsertArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(updatedColumnIndex + 1, 0, finalInsertArray[i])
+                }
+
+                console.log('shallowCopyStructureArray', shallowCopyStructureArray)
+                setStructureArray(shallowCopyStructureArray)
+            }
+        } else if (selectedCommand.includes('remove')) {
+            console.log('remove')
+            // structureArray
+            // finding if there's any row affected by removing column at current column index
+            // check if structureArray of columnValue at currentColumnIndex and different rowIndexes is not 1
+            let listOfCurrentMergePositionIni = []
+            for (let i = 0; i < shallowCopyStructureArray.length; i++) {
+                if (shallowCopyStructureArray[i][currentColumnIndex][1] !== 1 || shallowCopyStructureArray[i][currentColumnIndex][1] !== 1) {
+                    listOfCurrentMergePositionIni.push([i, currentColumnIndex])
+                }
+            }
+            console.log('currentColumnIndex', currentColumnIndex)
+            console.log('listOfCurrentMergePositionIni', listOfCurrentMergePositionIni) // correct
+            // if no matching found, insert new column of [1,1]
+            if (listOfCurrentMergePositionIni.length === 0) {
+                for (let i = 0; i < structureArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(currentColumnIndex, 1)
+                }
+                setStructureArray(shallowCopyStructureArray)
+            } else {
+                // condition #1 -- if there's merged row with starting position on the same column -> access columnIndex + 1 (right) change its structure value to [rowValue, columnValue -1]
+                // condition #2 -- if there's merged row with starting position left to selected column -> locate and reduce -1 to column value
+
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedRowIndex: number = listOfCurrentMergePositionIni[0][0]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    console.log('listOfCurrentMergePositionIni[i][0]', listOfCurrentMergePositionIni[i][0])
+                    console.log('currentStartingMergedRowIndex', currentStartingMergedRowIndex)
+                    let newStartingMergedRowIndex: number = listOfCurrentMergePositionIni[i][0] 
+                    if (listOfCurrentMergePositionIni[i][0] < currentStartingMergedRowIndex) continue
+
+                    // going through each affected row, starting at the top, check its structure value, if it's 0 (either col or row) move onto the left column
+                    // i.e. `listOfCurrentMergePositionIni[i][1] - 1` -> check again
+                    // if structure is not 0, get the row value -> it'll determine the next merge block
+                    let currentColumnIndex: number = listOfCurrentMergePositionIni[0][1];
+                    let condition: boolean = true;
+                    let counter: number = 0;
+                    while (condition) {
+                        let newStructureRowValue: number = structureArray[newStartingMergedRowIndex][currentColumnIndex - counter][0]
+                        if (newStructureRowValue !== 0) {
+                            listOfMergePositionFinal.push([newStartingMergedRowIndex, currentColumnIndex - counter])
+                            currentStartingMergedRowIndex = newStartingMergedRowIndex + newStructureRowValue
+                            condition = false
+                        } else {
+                            counter += 1
+                        }
+                    }
+                }
+
+                console.log('listOfMergePositionFinal', listOfMergePositionFinal)
+
+                // with the list of starting position for merged cells that are affected by removing current column
+                // accessing the structure (column) value and decrease by 1
+                // if the starting merged cell position is on the same column, note the row/column index, g
+                // rab the structure value of both row and column (-1 for removing current column), 
+                // insert the value into the row/column(+1)
+                // if currentColumn is the last column, skip it
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    if (item[1] === currentColumnIndex) {
+                        console.log('matched column')
+                        if (currentColumnIndex !== structureArray[0].length) {
+                            const newColumnStructureValue = shallowCopyStructureArray[item[0]][item[1]][1] - 1
+                            const newRowStructureValue = shallowCopyStructureArray[item[0]][item[1]][0]
+                            // shallowCopyStructureArray[item[0]][item[1] + 1] = [newRowStructureValue, newColumnStructureValue]
+                            shallowCopyStructureArray[item[0]].splice(item[1] + 1, 1, [newRowStructureValue, newColumnStructureValue])
+                        }
+                    } else {
+                        const newColumnStructureValue = shallowCopyStructureArray[item[0]][item[1]][1] - 1
+                        shallowCopyStructureArray[item[0]][item[1]][1] = newColumnStructureValue
+                    }
+                })
+
+                // insert structure to column left of selected column index
+                for (let i = 0; i < structureArray.length; i++) {
+                    shallowCopyStructureArray[i].splice(currentColumnIndex, 1)
+                }
+
+                console.log('shallowCopyStructureArray', shallowCopyStructureArray)
+                setStructureArray(shallowCopyStructureArray)
+            }
+        }
+
         setInputArray(shallowCopyInputArray)
+        // moving current selected cell to the right (+1)
         if (selectedCommand.includes('left')) {
             const selectedCellArray = cellSelected.split('-')
             selectedCellArray[2] = String(currentColumnIndex + 1)
@@ -129,44 +418,244 @@ const Spreadsheet: React.FC = () => {
         const shallowCopyInputArray = [...inputArray]
         const shallowCopyStructureArray = [...structureArray]
         if (selectedCommand.includes('remove')) {
-            shallowCopyInputArray.splice(currentRowIndex, 1)  
+            shallowCopyInputArray.splice(currentRowIndex, 1)
             setInputArray(shallowCopyInputArray)
 
             // structureArray
-            shallowCopyStructureArray.splice(currentRowIndex, 1)
-            setStructureArray(shallowCopyStructureArray)
+            // condition 1: first row
+            // --- change all merged row to 2nd row and -1 to structure row value
+            // condition 2: last row
+            // --- change all merged row that's not on the last row and -1 to structure row value
+            // condition 3: any middle row
+            // --- change all merged row above that include current row AND move merged cell
+
+
+            // Condition 1:
+            if (currentRowIndex === 0) {
+                let listOfCurrentMergePositionIni = []
+                for (let i = 0; i < shallowCopyStructureArray[currentRowIndex].length; i++) {
+                    if ((shallowCopyStructureArray[currentRowIndex][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex][i][1] !== 1) && (shallowCopyStructureArray[currentRowIndex + 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex + 1][i][1] !== 1)) {
+                        listOfCurrentMergePositionIni.push([currentRowIndex, i])
+                    }
+                }
+
+                // if empty, remove row
+                if (listOfCurrentMergePositionIni.length === 0) {
+                    shallowCopyStructureArray.splice(currentRowIndex, 1)
+                    setStructureArray(shallowCopyStructureArray)
+                    return
+                }
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[0][1]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    let newStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[i][1]
+                    if (newStartingMergedColumnIndex < currentStartingMergedColumnIndex) continue
+                    
+                    let newStructureColumnValue: number = structureArray[currentRowIndex][newStartingMergedColumnIndex][1]
+                    listOfMergePositionFinal.push([currentRowIndex, newStartingMergedColumnIndex])
+                    currentStartingMergedColumnIndex = newStartingMergedColumnIndex + newStructureColumnValue
+                }
+
+                // with the list of starting position for merged cells that are affected by inserting new row (above)
+                // accessing the structure (row) value and increment it by 1
+                // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    const newRowStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] - 1
+                    const newColumnStructureValue = shallowCopyStructureArray[item[0]][item[1]][1]
+                    shallowCopyStructureArray[item[0] + 1].splice(item[1], 1, [newRowStructureValue, newColumnStructureValue])
+                })
+                shallowCopyStructureArray.splice(currentRowIndex, 1)
+
+                setStructureArray(shallowCopyStructureArray)
+
+            }
+
+            // Condition 2:
+            else if (currentRowIndex === structureArray.length - 1) {
+                let listOfCurrentMergePositionIni = []
+                for (let i = 0; i < shallowCopyStructureArray[currentRowIndex].length; i++) {
+                    if ((shallowCopyStructureArray[currentRowIndex][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex][i][1] !== 1) && (shallowCopyStructureArray[currentRowIndex - 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex - 1][i][1] !== 1)) {
+                        listOfCurrentMergePositionIni.push([currentRowIndex, i])
+                    }
+                }
+
+                // if empty, remove row
+                if (listOfCurrentMergePositionIni.length === 0) {
+                    shallowCopyStructureArray.splice(currentRowIndex, 1)
+                    setStructureArray(shallowCopyStructureArray)
+                    return
+                }
+
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[0][1]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    let newStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[i][1]
+                    if (newStartingMergedColumnIndex < currentStartingMergedColumnIndex) continue
+
+                    // going through each affected column, starting at the left, check its structure value, if it's 0 (either col or row) move onto the row above
+                    // i.e. `listOfCurrentMergePositionIni[i][0] + 1` -> check again
+                    // if structure is not 0, get the row value -> it'll determine the next merge block
+                    let condition: boolean = true;
+                    let counter: number = 0;
+                    while (condition) {
+                        let newStructureColumnValue: number = structureArray[currentRowIndex - counter][newStartingMergedColumnIndex][1]
+                        if (newStructureColumnValue !== 0) {
+                            listOfMergePositionFinal.push([currentRowIndex - counter, newStartingMergedColumnIndex])
+                            currentStartingMergedColumnIndex = newStartingMergedColumnIndex + newStructureColumnValue
+                            condition = false
+                        } else {
+                            counter += 1
+                        }
+                    }
+                }
+
+                // with the list of starting position for merged cells that are affected by inserting new row (above)
+                // accessing the structure (row) value and increment it by 1
+                // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    if (item[0] !== currentRowIndex) {
+                        const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] - 1
+                        shallowCopyStructureArray[item[0]][item[1]][0] = newStructureValue
+                    }
+                })
+                shallowCopyStructureArray.splice(currentRowIndex, 1)
+
+                setStructureArray(shallowCopyStructureArray)
+            }
+            
+            // Condition 3:
+            else {
+                let listOfCurrentMergePositionIni = []
+                for (let i = 0; i < shallowCopyStructureArray[currentRowIndex].length; i++) {
+                    if (
+                        (shallowCopyStructureArray[currentRowIndex][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex][i][1] !== 1) 
+                    && 
+                    ((shallowCopyStructureArray[currentRowIndex - 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex - 1][i][1] !== 1) 
+                    || (shallowCopyStructureArray[currentRowIndex + 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex + 1][i][1] !== 1))
+                    ) {
+                        listOfCurrentMergePositionIni.push([currentRowIndex, i])
+                    }
+                }
+
+                console.log('listOfCurrentMergePositionIni', listOfCurrentMergePositionIni)
+
+                // if empty, remove row
+                if (listOfCurrentMergePositionIni.length === 0) {
+                    shallowCopyStructureArray.splice(currentRowIndex, 1)
+                    setStructureArray(shallowCopyStructureArray)
+                    return
+                }
+
+                let listOfMergePositionFinal = [] as number[][]
+                let currentStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[0][1]
+                for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                    let newStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[i][1]
+                    if (newStartingMergedColumnIndex < currentStartingMergedColumnIndex) continue
+
+                    // going through each affected column, starting at the left, check its structure value, if it's 0 (either col or row) move onto the row above
+                    // i.e. `listOfCurrentMergePositionIni[i][0] + 1` -> check again
+                    // if structure is not 0, get the row value -> it'll determine the next merge block
+                    let condition: boolean = true;
+                    let counter: number = 0;
+                    while (condition) {
+                        let newStructureColumnValue: number = structureArray[currentRowIndex - counter][newStartingMergedColumnIndex][1]
+                        if (newStructureColumnValue !== 0) {
+                            listOfMergePositionFinal.push([currentRowIndex - counter, newStartingMergedColumnIndex])
+                            currentStartingMergedColumnIndex = newStartingMergedColumnIndex + newStructureColumnValue
+                            condition = false
+                        } else {
+                            counter += 1
+                        }
+                    }
+                }
+
+                console.log('listOfMergePositionFinal', listOfMergePositionFinal)
+
+                // with the list of starting position for merged cells that are affected by inserting new row (above)
+                // accessing the structure (row) value and increment it by 1
+                // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
+                listOfMergePositionFinal.forEach((item: number[]) => {
+                    if (item[0] !== currentRowIndex) {
+                        const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] - 1
+                        shallowCopyStructureArray[item[0]][item[1]][0] = newStructureValue
+                    } else if (item[0] === currentRowIndex) {
+                        const newRowStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] - 1
+                        const newColumnStructureValue = shallowCopyStructureArray[item[0]][item[1]][1]
+                        shallowCopyStructureArray[item[0] + 1].splice(item[1], 1, [newRowStructureValue, newColumnStructureValue])
+                    }
+                })
+                shallowCopyStructureArray.splice(currentRowIndex, 1)
+
+                setStructureArray(shallowCopyStructureArray)
+            }
         } else {
             const numberOfColumn = inputArray[0].length
             const newRow = Array(numberOfColumn).fill('')
+            // --------------------------------- above ------------------------------------
             if (selectedCommand.includes('above')) {
+                console.log("add above")
                 shallowCopyInputArray.splice(currentRowIndex, 0, newRow)
                 const selectedCellArray = cellSelected.split('-')
                 selectedCellArray[1] = String(currentRowIndex + 1)
                 setCellSelected(selectedCellArray.join('-'))
                 setInputArray(shallowCopyInputArray)
 
-                // structureArray
+                // -------------- structureArray ------------------
+
+                // if selected row is first row, add new row above doesn't affect any merged cells
+                if (currentRowIndex === 0) {
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
+                    shallowCopyStructureArray.splice(currentRowIndex, 0, finalInsertArray)
+                    setStructureArray(shallowCopyStructureArray)
+                    return
+                }
+
                 // finding if there's any column affected by adding new row at current row index
                 // check if structureArray of rowValue at currentRowIndex and different columnIndexes isn't 1
                 let listOfCurrentMergePositionIni = []
                 for (let i = 0; i < shallowCopyStructureArray[currentRowIndex].length; i++) {
-                    if (shallowCopyStructureArray[currentRowIndex][i][0] !== 1) {
+                    if ((shallowCopyStructureArray[currentRowIndex][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex][i][1] !== 1) && (shallowCopyStructureArray[currentRowIndex - 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex - 1][i][1] !== 1)) {
                         listOfCurrentMergePositionIni.push([currentRowIndex, i])
                     }
                 }
+                console.log('currentRowIndex', currentRowIndex)
+                console.log('listOfCurrentMergePositionIni', listOfCurrentMergePositionIni) // correct
+
                 // if no matching found, insert new row of [1,1]
                 if (listOfCurrentMergePositionIni.length === 0) {
-                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
                     shallowCopyStructureArray.splice(currentRowIndex, 0, finalInsertArray)
                     setStructureArray(shallowCopyStructureArray)
                 } else {
-                    const listOfCurrentMergePositionMid = findIncreasingSequenceRow(listOfCurrentMergePositionIni)
-                    const listOfCurrentMergePositionFinal = findMergedCellStartingIndexRowAbove(listOfCurrentMergePositionMid)        
+                    let listOfMergePositionFinal = [] as number[][]
+                    let currentStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[0][1]
+                    for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                        let newStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[i][1]
+                        if (newStartingMergedColumnIndex < currentStartingMergedColumnIndex) continue
+    
+                        // going through each affected column, starting at the left, check its structure value, if it's 0 (either col or row) move onto the row above
+                        // i.e. `listOfCurrentMergePositionIni[i][0] + 1` -> check again
+                        // if structure is not 0, get the row value -> it'll determine the next merge block
+                        let condition: boolean = true;
+                        let counter: number = 0;
+                        while (condition) {
+                            let newStructureColumnValue: number = structureArray[currentRowIndex - counter][newStartingMergedColumnIndex][1]
+                            if (newStructureColumnValue !== 0) {
+                                listOfMergePositionFinal.push([currentRowIndex - counter, newStartingMergedColumnIndex])
+                                currentStartingMergedColumnIndex = newStartingMergedColumnIndex + newStructureColumnValue
+                                condition = false
+                            } else {
+                                counter += 1
+                            }
+                        }
+                    }
+
+                    console.log('listOfMergePositionFinal', listOfMergePositionFinal)
     
                     // create a new structure row of [1,1]
                     // change affected existing merged column to [0,0]
                     // if a cell/column is the starting merged column, skip it
-                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
                     listOfCurrentMergePositionIni.forEach((item: number[]) => {
                         if (structureArray[item[0]][item[1]][0] === 0) {
                             finalInsertArray.splice(item[1], 1, [0,0])
@@ -176,7 +665,7 @@ const Spreadsheet: React.FC = () => {
                     // with the list of starting position for merged cells that are affected by inserting new row (above)
                     // accessing the structure (row) value and increment it by 1
                     // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
-                    listOfCurrentMergePositionFinal.forEach((item: number[]) => {
+                    listOfMergePositionFinal.forEach((item: number[]) => {
                         if (item[0] !== currentRowIndex) {
                             const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] + 1
                             shallowCopyStructureArray[item[0]][item[1]][0] = newStructureValue
@@ -187,33 +676,63 @@ const Spreadsheet: React.FC = () => {
                     setStructureArray(shallowCopyStructureArray)
                 }
             } else if (selectedCommand.includes('below')) {
+                console.log('add below')
                 shallowCopyInputArray.splice(currentRowIndex + 1, 0, newRow)
                 setInputArray(shallowCopyInputArray)
 
                 // structureArray
-                // finding if there's any column affected by adding new row at current row index
+                // if last row, add row below doesn't affect anything, insert new row of [1,1]
+                if (currentRowIndex === structureArray.length - 1) {
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
+                    shallowCopyStructureArray.splice(currentRowIndex + 1, 0, finalInsertArray)
+                    setStructureArray(shallowCopyStructureArray)
+                    return
+                }
+                // finding if there's any column affected by adding new row at current row index + 1 (for row below)
                 // check if structureArray of rowValue at currentRowIndex and different columnIndexes isn't 1
                 let listOfCurrentMergePositionIni = []
                 for (let i = 0; i < shallowCopyStructureArray[currentRowIndex + 1].length; i++) {
-                    if (shallowCopyStructureArray[currentRowIndex + 1][i][0] !== 1) {
+                    if ((shallowCopyStructureArray[currentRowIndex][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex][i][1] !== 1) && (shallowCopyStructureArray[currentRowIndex + 1][i][0] !== 1 || shallowCopyStructureArray[currentRowIndex + 1][i][1] !== 1)) {
                         listOfCurrentMergePositionIni.push([currentRowIndex + 1, i])
                     }
                 }
                 // if no matching found, insert new row of [1,1]
                 if (listOfCurrentMergePositionIni.length === 0) {
-                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
                     shallowCopyStructureArray.splice(currentRowIndex + 1, 0, finalInsertArray)
                     setStructureArray(shallowCopyStructureArray)
                 } else {
-                    const listOfCurrentMergePositionMid = findIncreasingSequenceRow(listOfCurrentMergePositionIni)
-                    const listOfCurrentMergePositionFinal = findMergedCellStartingIndexRowAbove(listOfCurrentMergePositionMid)        
+                    let listOfMergePositionFinal = [] as number[][]
+                    let currentStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[0][1]
+                    for (let i = 0; i < listOfCurrentMergePositionIni.length; i++) {
+                        let newStartingMergedColumnIndex: number = listOfCurrentMergePositionIni[i][1]
+                        if (newStartingMergedColumnIndex < currentStartingMergedColumnIndex) continue
+    
+                        // going through each affected column, starting at the left, check its structure value, if it's 0 (either col or row) move onto the row above
+                        // i.e. `listOfCurrentMergePositionIni[i][0] + 1` -> check again
+                        // if structure is not 0, get the row value -> it'll determine the next merge block
+                        let condition: boolean = true;
+                        let counter: number = 0;
+                        while (condition) {
+                            let newStructureColumnValue: number = structureArray[currentRowIndex - counter][newStartingMergedColumnIndex][1]
+                            if (newStructureColumnValue !== 0) {
+                                listOfMergePositionFinal.push([currentRowIndex - counter, newStartingMergedColumnIndex])
+                                currentStartingMergedColumnIndex = newStartingMergedColumnIndex + newStructureColumnValue
+                                condition = false
+                            } else {
+                                counter += 1
+                            }
+                        }
+                    }
+
+                    console.log('listOfMergePositionFinal', listOfMergePositionFinal)
     
                     // create a new structure row of [1,1]
                     // change affected existing merged column to [0,0]
                     // if a cell/column is the starting merged column, skip it
-                    let finalInsertArray: number[][] = Array(10).fill([1,1])
+                    let finalInsertArray: number[][] = Array(structureArray[0].length).fill([1,1])
                     listOfCurrentMergePositionIni.forEach((item: number[]) => {
-                        if (structureArray[item[0]][item[1]][0] === 0) {
+                        if (structureArray[item[0]][item[1]][0] !== 1 && structureArray[item[0] + 1][item[1]][0] !== 1) {
                             finalInsertArray.splice(item[1], 1, [0,0])
                         }
                     })
@@ -221,12 +740,13 @@ const Spreadsheet: React.FC = () => {
                     // with the list of starting position for merged cells that are affected by inserting new row (above)
                     // accessing the structure (row) value and increment it by 1
                     // if the starting merged cell position is on the same row, inserting row above should not affect therefore it is skipped
-                    listOfCurrentMergePositionFinal.forEach((item: number[]) => {
-                        if (item[0] !== currentRowIndex + 1) {
+                    listOfMergePositionFinal.forEach((item: number[]) => {
+                        if (item[0] + structureArray[item[0]][item[1]][0] - 1 > currentRowIndex) {
                             const newStructureValue = shallowCopyStructureArray[item[0]][item[1]][0] + 1
                             shallowCopyStructureArray[item[0]][item[1]][0] = newStructureValue
                         }
                     })
+
                     shallowCopyStructureArray.splice(currentRowIndex + 1, 0, finalInsertArray)
     
                     setStructureArray(shallowCopyStructureArray)
@@ -269,7 +789,11 @@ const Spreadsheet: React.FC = () => {
         const newColumnStructureValue: number = parseInt(e.currentTarget.mergeColumnValue.value)
         const newRowStructureValue: number = parseInt(e.currentTarget.mergeRowValue.value)
 
-        if (newColumnStructureValue === 1 && newRowStructureValue === 1) {
+        if (structureArray[parseInt(cellSelected.split('-')[1])][parseInt(cellSelected.split('-')[2])][0] !== 1) {
+            return
+        }
+
+        if (newColumnStructureValue <= 1 && newRowStructureValue <= 1) {
             setMergeModalStatus(false)
             let form = document.getElementById('mergeForm')
             if(form) (form as HTMLFormElement).reset();
@@ -321,8 +845,8 @@ const Spreadsheet: React.FC = () => {
             return <></>
         } else {
             return (
-                <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected} colSpan={columnStructureValueAtIndex} rowSpan={rowStructureValueAtIndex}>
-                {/* <input id={`input-${rowIndex}-${columnIndex}`} type="text" /> */}
+                <td key={`${rowIndex}-${columnIndex}`} id={`cell-${rowIndex}-${columnIndex}`} className={isCellSelected(`cell-${rowIndex}-${columnIndex}`) ? "selectedCell" : "spreadsheet-tbody-tr-td"} onClick={handleOnSelected} colSpan={columnStructureValueAtIndex} rowSpan={rowStructureValueAtIndex} style={{textAlign: 'center'}}>
+                {structureArray[rowIndex][columnIndex][0] > 1 || structureArray[rowIndex][columnIndex][1] > 1 ? `${structureArray[rowIndex][columnIndex][0]} x ${structureArray[rowIndex][columnIndex][1]}` : ''}
                 </td>
             )
         }
@@ -363,7 +887,7 @@ const Spreadsheet: React.FC = () => {
                     <thead className="spreadsheet-thead">
                         <tr className="spreadsheet-thead-tr">
                         <th className="spreadsheet-thead-tr-td-first"></th>
-                            {inputArray[0] && inputArray[0].map((_, index) => {
+                            {structureArray[0] && structureArray[0].map((_, index) => {
                                 return (
                                     <th key={`header-${index}`} className="spreadsheet-thead-tr-td">{index + 1}</th>
                                 )
@@ -371,7 +895,7 @@ const Spreadsheet: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="spreadsheet-tbody">
-                        {inputArray.map((row, rowIndex) => {
+                        {structureArray[0] && structureArray.map((row, rowIndex) => {
                             return (
                                 <tr key={rowIndex} className="spreadsheet-tbody-tr">
                                     <th className="spreadsheet-tbody-tr-td-first">{rowIndex + 1}</th>
