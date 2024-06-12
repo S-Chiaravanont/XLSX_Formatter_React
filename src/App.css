@@ -1,8 +1,10 @@
 .header-banner {
-  background-color: #ffb3ba;
+  /* background-color: #FFBAD9; */
+  background-color: #b9d9ff;
   margin: 0;
   height: 60px;
   padding: 10px;
+  padding-left: 20px;
 }
 
 .header-banner > p {
@@ -13,7 +15,8 @@
 .spreadsheet-table {
   border-collapse: collapse;
   width: 100%;
-  max-width: 100vw;
+  max-width: 97vw;
+  background-color: white;
 }
 
 .spreadsheet-thead,
@@ -62,7 +65,7 @@
 .spreadsheet-div {
   width: 1400px;
   margin: auto;
-  padding: 25px;
+  padding: 1%;
 }
 
 /* 
@@ -132,6 +135,75 @@
   background-color: white;
   border-radius: 20px;
   border: 1px solid black;
-  position: fixed;
-  left: 
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 250;
+  height: 220px;
+  padding: 15px;
+}
+
+.codeBlockStyles {
+  width: 500px;
+  height: 500px;
+  margin-top: 30px;
+  border-radius: 10px;
+  background-color: #222222;
+  color: white;
+}
+
+.codeBlockHeaderStyles {
+  padding: 5px 10px;
+  height: 30px;
+  background-color: #282C37;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.codeBlockHeaderStyles > p {
+  margin: 0;
+  line-height: 30px;
+}
+
+.codeBlockCopyButtonStyle {
+  background: none;
+  border: none;
+  color: white;
+  height: 100%;
+}
+
+.codeBlockCopyButtonStyle:hover {
+  cursor: pointer;
+  color: lightgray;
+}
+
+.copiedDivStyle {
+ line-height: 30px;
+}
+
+.codeBlockAndAboutDiv {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+ }
+
+.codeBlockDiv {
+  display: flex;
+  flex-basis: 45%;
+}
+
+.aboutDiv {
+  flex-basis: 45%;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 15px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  border-left: '1px solid gray';
+  border-top: '1px solid gray';
+  margin-top: 30px;
+  background-color: white;
+  padding: 15px;
 }

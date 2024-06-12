@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import hljs from "highlight.js";
-import "highlight.js/styles/github.css";
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { arta } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import IonIcon from '@reacticons/ionicons';
 
 interface StatefulComponentState {
     inputArray: string[][];
@@ -16,6 +17,8 @@ const Spreadsheet: React.FC = () => {
     const [rowMenuVisibility, setRowMenuVisibility] = useState<Boolean>(false);
     const [cellMenuVisibility, setCellMenuVisibility] = useState<Boolean>(false);
     const [mergeModalStatus, setMergeModalStatus] = useState<Boolean>(false);
+    const [codeBlockData, setCodeBlockData] = useState<string>('');
+    const [copyDataState, setCopyDataState] = useState<Boolean>(false);
 
     useEffect(() => {
         setStructureArray(Array.from({length: 10}, () => Array(10).fill([1,1])))
@@ -23,8 +26,20 @@ const Spreadsheet: React.FC = () => {
     }, [])
 
     useEffect(() => {
-        hljs.highlightAll();
-    });
+        let newCodeData = '';
+        structureArray.forEach((row, rowIndex) => {
+            row.forEach((column, columnIndex) => {
+                if (column[0] > 1 || column[1] > 1) {
+                    newCodeData += "  { s: { r: " + rowIndex + ", c: " + columnIndex + " }, e: { r: " + (rowIndex + column[0]) + "}, c: " + (columnIndex + column[1]) + " } },\n"
+                }
+            })
+        })
+        const finalCodeData = "const merge = [\n" + newCodeData + "];\nws['!merges'] = merge;"
+        setCodeBlockData(finalCodeData)
+        if (copyDataState) {
+            setCopyDataState(!copyDataState)
+        }
+    }, [structureArray])
 
     const handleOnSelected = (event: React.MouseEvent): void => {
         let cellIndex: string;
@@ -985,6 +1000,35 @@ const Spreadsheet: React.FC = () => {
         }
     }
 
+    const handleCopyButton = () => {
+        navigator.clipboard.writeText(codeBlockData)
+        setCopyDataState(true)
+    }
+
+    const codeBlockRender = () => {
+        return (
+            <div className="codeBlockStyles">
+                <div className="codeBlockHeaderStyles">
+                    <p>Code block:</p>
+                    {copyDataState ? 
+                    <div className="copiedDivStyle">
+                        <IonIcon name="checkmark-outline"></IonIcon>
+                        <span>Copied!</span>
+                    </div>
+                     : <button className="codeBlockCopyButtonStyle" onClick={handleCopyButton}>
+                        <IonIcon name="clipboard-outline"></IonIcon>
+                        <span>Copy Code</span>
+                    </button>
+                    }
+                    
+                </div>
+                <SyntaxHighlighter language="Javascript" style={arta} lineProps={{style: {wordBreak: 'break-all', whiteSpace: 'pre-wrap', paddingLeft: '10px'}}} wrapLines={true} >
+                    {codeBlockData}
+                </SyntaxHighlighter>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className="spreadsheet-div">
@@ -1040,6 +1084,16 @@ const Spreadsheet: React.FC = () => {
                         })}
                     </tbody>
                 </table>
+                <div className="codeBlockAndAboutDiv">
+                    <div className="codeBlockDiv">
+                        {codeBlockRender()}
+                    </div>
+                    <div className="aboutDiv">
+                        <p>About this tool</p>
+                        <h3>MergeScript Express</h3>
+                        <p>MergeScript Express is designed to streamline the process of generating JavaScript code compatible with the SheetJS package, focusing particularly on merging cells functionality. With our intuitive interface, users can effortlessly create the necessary code snippets tailored to their merging requirements, saving time and ensuring compatibility with SheetJS. MergeScript Express simplifies the task of incorporating merging cells functionality into your projects.</p>
+                    </div>
+                </div>
             </div>
             {mergeModal()}
         </>
