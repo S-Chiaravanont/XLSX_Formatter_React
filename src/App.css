@@ -4,7 +4,7 @@
   margin: 0;
   height: 60px;
   padding: 10px;
-  padding-left: 20px;
+  padding-left: 1%;
 }
 
 .header-banner > p {
@@ -63,7 +63,7 @@
 }
 
 .spreadsheet-div {
-  width: 1400px;
+  width: 100%;
   margin: auto;
   padding: 1%;
 }
@@ -84,7 +84,7 @@
 }
 
  /* Dropdown Button */
- .row-dropbtn {
+ .dropbtn, .modalButton {
   color: black;
   padding: 10px;
   font-size: 16px;
@@ -93,14 +93,20 @@
   margin-right: 5px;
 }
 
+.modalButton:hover {
+  color: darkgray;
+  background-color: #eaeaea;
+  cursor: pointer;
+}
+
 /* The container <div> - needed to position the dropdown content */
-.row-dropdown {
+.dropdown {
   position: relative;
   display: inline-block;
 }
 
 /* Dropdown Content (Hidden by Default) */
-.row-dropdown-content {
+.dropdown-content {
   display: block;
   position: absolute;
   background-color: #f1f1f1;
@@ -113,7 +119,7 @@
 }
 
 /* Links inside the dropdown */
-.row-dropdown-content p {
+.dropdown-content p {
   color: black;
   padding: 12px 16px;
   text-decoration: none;
@@ -123,25 +129,33 @@
 }
 
 /* Change color of dropdown links on hover */
-.row-dropdown-content p:hover {background-color: #ddd; cursor: pointer;}
+.dropdown-content p:hover {background-color: #ddd; cursor: pointer;}
 
 /* Show the dropdown menu on hover */
 /* .row-dropdown:hover .row-dropdown-content {display: block;} */
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-.row-dropdown:hover .row-dropbtn {background-color: #ffdfba; color: white;} 
+.dropdown:hover .dropbtn {background-color: #ffdfba; color: white;} 
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .merge-modal {
-  background-color: white;
-  border-radius: 20px;
-  border: 1px solid black;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 250;
-  height: 220px;
-  padding: 15px;
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 200px;
+  max-width: 100%;
 }
 
 .codeBlockStyles {

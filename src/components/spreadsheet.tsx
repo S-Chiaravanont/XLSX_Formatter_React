@@ -969,16 +969,20 @@ const Spreadsheet: React.FC = () => {
     const mergeModal = () => {
         if (mergeModalStatus) {
             return (
-                <div className="merge-modal" id="merge-modal">
-                    <form onSubmit={handleMergeSubmit} id="mergeForm">
-                        <p>Merge tool:</p>
-                        <p>Column span:</p><input type="number" id="merge-column" name="mergeColumnValue" defaultValue={1} min={1} />
-                        <p>Row span:</p><input type="number" id="merge-row" name="mergeRowValue" defaultValue={1} min={1} />
-                        <div>
-                            <button type="submit">Merge</button>
-                            <button onClick={() => setMergeModalStatus(false)}>Back</button>
-                        </div>
-                    </form>
+                <div className="modal-overlay">
+                    <div className="merge-modal" id="merge-modal">
+                        <form onSubmit={handleMergeSubmit} id="mergeForm">
+                            <h3>Merge tool:</h3>
+                            <p>Column span:</p>
+                            <input type="number" id="merge-column" name="mergeColumnValue" defaultValue={1} min={1} style={{width: '100%'}} />
+                            <p>Row span:</p>
+                            <input type="number" id="merge-row" name="mergeRowValue" defaultValue={1} min={1} style={{width: '100%'}} />
+                            <div style={{marginTop: '15px', marginBottom: '15px', display: 'flex', justifyContent: 'space-evenly'}}>
+                                <button type="submit" className="modalButton">Merge</button>
+                                <button onClick={() => setMergeModalStatus(false)} className="modalButton">Back</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )
         } else {
@@ -1033,24 +1037,24 @@ const Spreadsheet: React.FC = () => {
         <>
             <div className="spreadsheet-div">
                 <div className="spreadsheet-menus-div">
-                    <div className="row-dropdown" id='column-dropdown-div' onMouseEnter={() => setCellMenuVisibility(true)} onMouseLeave={() => setCellMenuVisibility(false)}>
-                        <button className="row-dropbtn" id="cell-dropdown-button">Cell</button>
-                        {cellMenuVisibility &&<div className="row-dropdown-content" id='cell-dropdown-content'>
+                    <div className="dropdown" id='column-dropdown-div' onMouseEnter={() => setCellMenuVisibility(true)} onMouseLeave={() => setCellMenuVisibility(false)}>
+                        <button className="dropbtn" id="cell-dropdown-button">Cell</button>
+                        {cellMenuVisibility &&<div className="dropdown-content" id='cell-dropdown-content'>
                             <p id="merge-cell" onClick={handleCellMenu}>Merge</p>
                             <p id="split-cell" onClick={handleCellMenu}>Split</p>
                         </div>}
                     </div> 
-                    <div className="row-dropdown" id='column-dropdown-div' onMouseEnter={() => setColumnMenuVisibility(true)} onMouseLeave={() => setColumnMenuVisibility(false)}>
-                        <button className="row-dropbtn" id='column-dropdown-button'>Column</button>
-                        {columnMenuVisibility && <div className="row-dropdown-content" id='column-dropdown-content'>
+                    <div className="dropdown" id='column-dropdown-div' onMouseEnter={() => setColumnMenuVisibility(true)} onMouseLeave={() => setColumnMenuVisibility(false)}>
+                        <button className="dropbtn" id='column-dropdown-button'>Column</button>
+                        {columnMenuVisibility && <div className="dropdown-content" id='column-dropdown-content'>
                             <p id="add-column-left" onClick={handleColumnMenu}>Add column (left)</p>
                             <p id="add-column-right" onClick={handleColumnMenu}>Add column (right)</p>
                             <p id="remove-column" onClick={handleColumnMenu}>Remove column</p>
                         </div>}
                     </div> 
-                    <div className="row-dropdown" onMouseEnter={() => setRowMenuVisibility(true)} onMouseLeave={() => setRowMenuVisibility(false)}>
-                        <button className="row-dropbtn">Row</button>
-                        {rowMenuVisibility && <div className="row-dropdown-content" id='row-dropdown-content'>
+                    <div className="dropdown" onMouseEnter={() => setRowMenuVisibility(true)} onMouseLeave={() => setRowMenuVisibility(false)}>
+                        <button className="dropbtn">Row</button>
+                        {rowMenuVisibility && <div className="dropdown-content" id='row-dropdown-content'>
                             <p id="add-row-above" onClick={handleRowMenu}>Add row (above)</p>
                             <p id="add-row-below" onClick={handleRowMenu}>Add row (below)</p>
                             <p id="remove-row" onClick={handleRowMenu}>Remove row</p>
@@ -1092,6 +1096,9 @@ const Spreadsheet: React.FC = () => {
                         <p>About this tool</p>
                         <h3>MergeScript Express</h3>
                         <p>MergeScript Express is designed to streamline the process of generating JavaScript code compatible with the SheetJS package, focusing particularly on merging cells functionality. With our intuitive interface, users can effortlessly create the necessary code snippets tailored to their merging requirements, saving time and ensuring compatibility with SheetJS. MergeScript Express simplifies the task of incorporating merging cells functionality into your projects.</p>
+                        <br />
+                        <h3>Why this tool?</h3>
+                        <p>I developed this tool with a primary goal: to learn TypeScript and strengthen my knowledge of React Framework. I chose Excel merge feature because of its substancial challenge, one that I embraced as an opportunity to enhance my problem-solving skills and deepen my understanding of data manipulation. I've tackled each development stage with dedication, aiming to better these technologies and grow my expertise in the web development field. </p>
                     </div>
                 </div>
             </div>
