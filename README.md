@@ -1,6 +1,6 @@
-# Getting Started with Create React App
+# Getting Started with MergeScript Express (XLSX_Formatter_React)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a platform where users can create merged cells on a given spreadsheet (Excel like) interface on the web app. And it will generate usable JavaScript code snipet that users can copy and insert onto their own application in conjunction with SheetJS package. (https://www.npmjs.com/package/sheetjs)
 
 ## Available Scripts
 
