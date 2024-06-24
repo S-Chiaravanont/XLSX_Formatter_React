@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/XLSX_Formatter_react/static/css/main.8c910920.css",
+    "main.js": "/XLSX_Formatter_react/static/js/main.c387aa16.js",
+    "static/js/592.7f72a991.chunk.js": "/XLSX_Formatter_react/static/js/592.7f72a991.chunk.js",
+    "index.html": "/XLSX_Formatter_react/index.html",
+    "main.8c910920.css.map": "/XLSX_Formatter_react/static/css/main.8c910920.css.map",
+    "main.c387aa16.js.map": "/XLSX_Formatter_react/static/js/main.c387aa16.js.map",
+    "592.7f72a991.chunk.js.map": "/XLSX_Formatter_react/static/js/592.7f72a991.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8c910920.css",
+    "static/js/main.c387aa16.js"
+  ]
+}
