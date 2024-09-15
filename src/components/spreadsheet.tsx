@@ -3,11 +3,11 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { arta } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import IonIcon from '@reacticons/ionicons';
 
-interface StatefulComponentState {
-    inputArray: string[][];
-    structureArray: number[][][];
-    cellSelected: string;
-}
+// interface StatefulComponentState {
+//     inputArray: string[][];
+//     structureArray: number[][][];
+//     cellSelected: string;
+// }
 
 const Spreadsheet: React.FC = () => {
     const [inputArray, setInputArray] = useState<string[][]>([]);
