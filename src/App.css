@@ -7,7 +7,7 @@
   padding-left: 1%;
 }
 
-.header-banner > p {
+.header-banner>p {
   margin: 0;
   line-height: 60px;
 }
@@ -33,16 +33,16 @@
   word-wrap: break-word;
 }
 
-.spreadsheet-tbody-tr-td > input,
-.selectedCell > input {
+.spreadsheet-tbody-tr-td>input,
+.selectedCell>input {
   width: 100%;
   margin: 0;
   padding: 0;
   border: none;
 }
 
-.spreadsheet-tbody-tr-td > input:focus,
-.selectedCell > input:focus {
+.spreadsheet-tbody-tr-td>input:focus,
+.selectedCell>input:focus {
   outline: none;
 }
 
@@ -83,8 +83,9 @@
   align-content: end;
 }
 
- /* Dropdown Button */
- .dropbtn, .modalButton {
+/* Dropdown Button */
+.dropbtn,
+.modalButton {
   color: black;
   padding: 10px;
   font-size: 16px;
@@ -110,7 +111,7 @@
   display: block;
   position: absolute;
   background-color: #f1f1f1;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
 }
 
@@ -129,13 +130,19 @@
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content p:hover {background-color: #ddd; cursor: pointer;}
+.dropdown-content p:hover {
+  background-color: #ddd;
+  cursor: pointer;
+}
 
 /* Show the dropdown menu on hover */
 /* .row-dropdown:hover .row-dropdown-content {display: block;} */
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {background-color: #ffdfba; color: white;} 
+.dropdown:hover .dropbtn {
+  background-color: #ffdfba;
+  color: white;
+}
 
 .modal-overlay {
   position: fixed;
@@ -176,7 +183,7 @@
   justify-content: space-between;
 }
 
-.codeBlockHeaderStyles > p {
+.codeBlockHeaderStyles>p {
   margin: 0;
   line-height: 30px;
 }
@@ -194,7 +201,7 @@
 }
 
 .copiedDivStyle {
- line-height: 30px;
+  line-height: 30px;
 }
 
 .codeBlockAndAboutDiv {
@@ -202,7 +209,7 @@
   width: 100%;
   flex-wrap: wrap;
   justify-content: space-evenly;
- }
+}
 
 .codeBlockDiv {
   display: flex;
