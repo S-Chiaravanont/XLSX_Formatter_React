@@ -1,3 +1,29 @@
+# Getting Started with MergeScript Express (XLSX_Formatter_React)
+
+This project is a platform where users can create merged cells on a given spreadsheet (Excel like) interface on the web app. And it will generate usable JavaScript code snipet that users can copy and insert onto their own application in conjunction with SheetJS package. (https://www.npmjs.com/package/sheetjs)
+
+## Available Scripts
+
+In the project directory, you can run:
+
+### `npm start`
+
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
+
+### `npm run build`
+
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
+
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
